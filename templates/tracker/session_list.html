@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Sessions | {{ product_name }}{% endblock %}
+{% block page_title %}Sessions{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Investigate sessions</p>
+        <h2>Filter likely AI agents, referrers, resource types, and time windows.</h2>
+        <p class="muted">Use this view as your primary triage queue for suspicious traffic and content-access behavior.</p>
+      </div>
+      <div class="meta-chip-stack">
+        <span class="topbar-chip">{{ result_count }} matching sessions</span>
+      </div>
+    </div>
+    <form method="get" class="filter-grid">
+      <div class="field">
+        {{ form.classification.label_tag }}
+        {{ form.classification }}
+      </div>
+      <div class="field">
+        {{ form.resource_type.label_tag }}
+        {{ form.resource_type }}
+      </div>
+      <div class="field field-wide">
+        {{ form.referrer.label_tag }}
+        {{ form.referrer }}
+      </div>
+      <div class="field">
+        {{ form.date_from.label_tag }}
+        {{ form.date_from }}
+      </div>
+      <div class="field">
+        {{ form.date_to.label_tag }}
+        {{ form.date_to }}
+      </div>
+      <div class="filter-actions">
+        <button type="submit">Apply filters</button>
+        <a class="ghost-link" href="{% url 'tracker:session_list' %}">Reset</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Session</th>
+          <th>Classification</th>
+          <th>Confidence</th>
+          <th>Source</th>
+          <th>Referrer</th>
+          <th>Last seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for session in sessions %}
+          <tr>
+            <td>
+              <a class="session-link" href="{% url 'tracker:session_detail' session.public_id %}">{{ session.session_key }}</a>
+              <small>{{ session.landing_path|default:"-" }}</small>
+            </td>
+            <td><span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span></td>
+            <td>{{ session.confidence }}%</td>
+            <td>{{ session.traffic_source|default:"direct" }}</td>
+            <td>{{ session.landing_referrer|default:"-"|truncatechars:70 }}</td>
+            <td>{{ session.last_seen_at|date:"Y-m-d H:i:s" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">No sessions matched these filters.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}

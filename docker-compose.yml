@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-airecaptcha}
+      POSTGRES_USER: ${POSTGRES_USER:-airecaptcha}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-airecaptcha}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-airecaptcha} -d ${POSTGRES_DB:-airecaptcha}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-airecaptcha}:${POSTGRES_PASSWORD:-airecaptcha}@postgres:5432/${POSTGRES_DB:-airecaptcha}}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-key-change-me}
+      TRACKER_BASE_URL: ${TRACKER_BASE_URL:-http://localhost:8000}
+      TRACKER_INGEST_TOKEN: ${TRACKER_INGEST_TOKEN:-change-me}
+      TRACKER_BOOTSTRAP_ADMIN_EMAIL: ${TRACKER_BOOTSTRAP_ADMIN_EMAIL:-admin@example.com}
+      TRACKER_BOOTSTRAP_ADMIN_PASSWORD: ${TRACKER_BOOTSTRAP_ADMIN_PASSWORD:-ChangeMe123!}
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:

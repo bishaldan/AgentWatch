@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ product_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'tracker/dashboard.css' %}">
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div>
+            <p class="eyebrow">Publisher Security</p>
+            <h1>{{ product_name }}</h1>
+            <p class="muted sidebar-copy">Visibility-first tracking for likely AI agents, suspicious journeys, and content-access behavior.</p>
+          </div>
+          <div class="sidebar-status">
+            <span class="status-dot"></span>
+            <div>
+              <small>Monitoring</small>
+              <strong>{{ tracker_site_id }}</strong>
+            </div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="{% url 'tracker:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Overview</a>
+          <a href="{% url 'tracker:session_list' %}" class="{% if request.resolver_match.url_name == 'session_list' or request.resolver_match.url_name == 'session_detail' %}active{% endif %}">Sessions</a>
+          <a href="/admin/" class="{% if '/admin/' in request.path %}active{% endif %}">Django admin</a>
+        </nav>
+        {% if request.user.is_authenticated %}
+          <div class="sidebar-user">
+            <small>Signed in as</small>
+            <strong>{{ request.user.email|default:request.user.username }}</strong>
+          </div>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="secondary">Sign out</button>
+          </form>
+        {% endif %}
+      </aside>
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Operations Console</p>
+            <h2 class="page-title">{% block page_title %}{{ product_name }}{% endblock %}</h2>
+          </div>
+          <div class="topbar-meta">
+            <span class="topbar-chip">Single-tenant</span>
+            <span class="topbar-chip">Passive detection</span>
+          </div>
+        </header>
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>

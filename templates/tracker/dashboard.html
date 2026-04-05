@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Overview | {{ product_name }}{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Single-tenant operator dashboard</p>
+      <h2>See who touched your content, how they arrived, and what your site actually served.</h2>
+      <p class="muted">Use this console to separate human traffic from likely AI agents, investigate suspicious journeys, and understand what resources were exposed.</p>
+      <div class="hero-actions">
+        <a class="button-link" href="{% url 'tracker:session_list' %}">Review sessions</a>
+        <span class="subtle-note">“Accessed” means requested and served. “Likely extracted” remains an estimate.</span>
+      </div>
+    </div>
+    <div class="meta-card meta-card-compact">
+      <span>Site ID</span>
+      <strong>{{ tracker_site_id }}</strong>
+      <span>Generated</span>
+      <strong>{{ generated_at|date:"Y-m-d H:i" }}</strong>
+    </div>
+  </section>
+
+  <section class="card-grid">
+    <article class="stat-card">
+      <span>Total sessions</span>
+      <strong>{{ overview.total_sessions }}</strong>
+      <small>All tracked journeys</small>
+    </article>
+    <article class="stat-card stat-card-alert">
+      <span>Suspicious sessions</span>
+      <strong>{{ overview.suspicious_sessions }}</strong>
+      <small>Needs operator review</small>
+    </article>
+    <article class="stat-card">
+      <span>Known AI crawlers</span>
+      <strong>{{ overview.known_ai_crawlers }}</strong>
+      <small>Self-identifying AI traffic</small>
+    </article>
+    <article class="stat-card">
+      <span>Human sessions</span>
+      <strong>{{ overview.human_sessions }}</strong>
+      <small>Likely normal browsing</small>
+    </article>
+  </section>
+
+  <section class="split split-wide">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Priority queue</p>
+          <h3>Top suspicious sessions</h3>
+        </div>
+      </div>
+      <div class="session-card-list">
+        {% for session in top_suspicious_sessions %}
+          <a class="session-card" href="{% url 'tracker:session_detail' session.public_id %}">
+            <div class="session-card-top">
+              <strong>{{ session.session_key }}</strong>
+              <span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span>
+            </div>
+            <p>{{ session.explanation|default:"No explanation recorded."|truncatechars:120 }}</p>
+            <div class="session-card-meta">
+              <span>{{ session.confidence }}% confidence</span>
+              <span>{{ session.traffic_source|default:"direct" }}</span>
+              <span>{{ session.last_seen_at|date:"Y-m-d H:i" }}</span>
+            </div>
+          </a>
+        {% empty %}
+          <div class="empty-state">
+            <strong>No suspicious sessions yet.</strong>
+            <p>The console will highlight likely crawlers and agents here as soon as traffic arrives.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Acquisition</p>
+          <h3>Top referrers</h3>
+        </div>
+      </div>
+      <ul class="plain-list">
+        {% for item in top_referrers %}
+          <li>
+            <span>{{ item.landing_referrer|default:"Direct" }}</span>
+            <strong>{{ item.total }} sessions</strong>
+          </li>
+        {% empty %}
+          <li><span>No referrer data yet.</span></li>
+        {% endfor %}
+      </ul>
+    </article>
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Content pressure</p>
+          <h3>Top targeted paths</h3>
+        </div>
+      </div>
+      <ul class="plain-list">
+        {% for item in top_paths %}
+          <li>
+            <span>{{ item.path }}</span>
+            <strong>{{ item.total }} hits • {{ item.bytes_sum|default:0 }} bytes</strong>
+          </li>
+        {% empty %}
+          <li><span>No path data yet.</span></li>
+        {% endfor %}
+      </ul>
+    </article>
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Resource mix</p>
+          <h3>What your site served</h3>
+        </div>
+      </div>
+      <ul class="plain-list">
+        {% for item in resource_mix %}
+          <li>
+            <span>{{ item.resource_type|title }}</span>
+            <strong>{{ item.total }} events</strong>
+          </li>
+        {% empty %}
+          <li><span>No resource activity yet.</span></li>
+        {% endfor %}
+      </ul>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Recent activity</p>
+        <h3>Latest sessions</h3>
+      </div>
+      <a href="{% url 'tracker:session_list' %}">See all sessions</a>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Session</th>
+          <th>Classification</th>
+          <th>Confidence</th>
+          <th>Source</th>
+          <th>Landing path</th>
+          <th>Last seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for session in latest_sessions %}
+          <tr>
+            <td>
+              <a class="session-link" href="{% url 'tracker:session_detail' session.public_id %}">{{ session.session_key }}</a>
+              <small>{{ session.landing_referrer|default:"direct"|truncatechars:42 }}</small>
+            </td>
+            <td><span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span></td>
+            <td>{{ session.confidence }}%</td>
+            <td>{{ session.traffic_source|default:"direct" }}</td>
+            <td>{{ session.landing_path|default:"-" }}</td>
+            <td>{{ session.last_seen_at|date:"Y-m-d H:i:s" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">No sessions recorded yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}

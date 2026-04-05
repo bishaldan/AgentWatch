@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Session {{ session.session_key }} | {{ product_name }}{% endblock %}
+{% block page_title %}Session investigation{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Session investigation</p>
+      <h2>{{ session.session_key }}</h2>
+      <p class="muted">{{ session.explanation|default:"No strong automation signals detected." }}</p>
+      <div class="hero-actions">
+        <span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span>
+        <span class="subtle-note">{{ session.confidence }}% confidence • score {{ session.latest_score }}</span>
+      </div>
+    </div>
+    <div class="meta-card meta-card-compact">
+      <span>Classification</span>
+      <strong>{{ session.get_classification_display }}</strong>
+      <span>Confidence</span>
+      <strong>{{ session.confidence }}%</strong>
+      <span>Score</span>
+      <strong>{{ session.latest_score }}</strong>
+    </div>
+  </section>
+
+  <section class="card-grid">
+    <article class="stat-card">
+      <span>Landing path</span>
+      <strong>{{ session.landing_path|default:"-" }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Referrer</span>
+      <strong>{{ session.landing_referrer|default:"direct" }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Traffic source</span>
+      <strong>{{ session.traffic_source|default:"direct" }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Browser telemetry</span>
+      <strong>{% if session.browser_seen %}Seen{% else %}Not seen{% endif %}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Requests</span>
+      <strong>{{ total_requests }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Resource events</span>
+      <strong>{{ total_resources }}</strong>
+    </article>
+    <article class="stat-card">
+      <span>Bytes served</span>
+      <strong>{{ total_bytes }}</strong>
+    </article>
+  </section>
+
+  <section class="split">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Why this session was flagged</p>
+          <h3>Detection reasons</h3>
+        </div>
+      </div>
+      <ul class="plain-list">
+        {% for signal in signal_list %}
+          <li>
+            <span>{{ signal.label }}</span>
+            <strong>weight {{ signal.weight }}</strong>
+          </li>
+        {% empty %}
+          <li><span>No strong automation signals recorded.</span></li>
+        {% endfor %}
+      </ul>
+    </article>
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Requested and served</p>
+          <h3>Content accessed summary</h3>
+        </div>
+      </div>
+      <ul class="plain-list">
+        {% for item in resource_summary %}
+          <li>
+            <span>{{ item.resource_type|title }}</span>
+            <strong>{{ item.total }} events • {{ item.bytes_sum|default:0 }} bytes</strong>
+          </li>
+        {% empty %}
+          <li><span>No resource events recorded.</span></li>
+        {% endfor %}
+      </ul>
+      <p class="footnote">Content accessed means resources requested and served. It does not prove downstream retention.</p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Chronology</p>
+        <h3>Timeline</h3>
+      </div>
+      <div class="export-links">
+        <a class="ghost-link" href="{% url 'tracker:session_export_json' session.public_id %}">Export JSON</a>
+        <a class="ghost-link" href="{% url 'tracker:session_export_csv' session.public_id %}">Export CSV</a>
+      </div>
+    </div>
+    <ul class="timeline">
+      {% for item in timeline %}
+        <li class="timeline-item timeline-{{ item.kind }}">
+          <span class="timeline-time">{{ item.occurred_at|date:"Y-m-d H:i:s" }}</span>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.detail }}</p>
+          <small>{{ item.bytes_served }} bytes</small>
+        </li>
+      {% empty %}
+        <li>No events recorded for this session.</li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endblock %}
