@@ -4,173 +4,205 @@
 {% block page_title %}Overview{% endblock %}
 
 {% block content %}
-  <section class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">Single-tenant operator dashboard</p>
-      <h2>See who touched your content, how they arrived, and what your site actually served.</h2>
-      <p class="muted">Use this console to separate human traffic from likely AI agents, investigate suspicious journeys, and understand what resources were exposed.</p>
-      <div class="hero-actions">
-        <a class="button-link" href="{% url 'tracker:session_list' %}">Review sessions</a>
-        <span class="subtle-note">“Accessed” means requested and served. “Likely extracted” remains an estimate.</span>
-      </div>
-    </div>
-    <div class="meta-card meta-card-compact">
-      <span>Site ID</span>
-      <strong>{{ tracker_site_id }}</strong>
-      <span>Generated</span>
-      <strong>{{ generated_at|date:"Y-m-d H:i" }}</strong>
-    </div>
-  </section>
-
-  <section class="card-grid">
-    <article class="stat-card">
-      <span>Total sessions</span>
-      <strong>{{ overview.total_sessions }}</strong>
-      <small>All tracked journeys</small>
-    </article>
-    <article class="stat-card stat-card-alert">
-      <span>Suspicious sessions</span>
-      <strong>{{ overview.suspicious_sessions }}</strong>
-      <small>Needs operator review</small>
-    </article>
-    <article class="stat-card">
-      <span>Known AI crawlers</span>
-      <strong>{{ overview.known_ai_crawlers }}</strong>
-      <small>Self-identifying AI traffic</small>
-    </article>
-    <article class="stat-card">
-      <span>Human sessions</span>
-      <strong>{{ overview.human_sessions }}</strong>
-      <small>Likely normal browsing</small>
-    </article>
-  </section>
-
-  <section class="split split-wide">
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Priority queue</p>
-          <h3>Top suspicious sessions</h3>
-        </div>
-      </div>
-      <div class="session-card-list">
-        {% for session in top_suspicious_sessions %}
-          <a class="session-card" href="{% url 'tracker:session_detail' session.public_id %}">
-            <div class="session-card-top">
-              <strong>{{ session.session_key }}</strong>
-              <span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span>
-            </div>
-            <p>{{ session.explanation|default:"No explanation recorded."|truncatechars:120 }}</p>
-            <div class="session-card-meta">
-              <span>{{ session.confidence }}% confidence</span>
-              <span>{{ session.traffic_source|default:"direct" }}</span>
-              <span>{{ session.last_seen_at|date:"Y-m-d H:i" }}</span>
-            </div>
-          </a>
-        {% empty %}
-          <div class="empty-state">
-            <strong>No suspicious sessions yet.</strong>
-            <p>The console will highlight likely crawlers and agents here as soon as traffic arrives.</p>
+  <section class="hero-panel card border-0 shadow-sm mb-4 overflow-hidden">
+    <div class="card-body p-4 p-xl-5">
+      <div class="row g-4 align-items-start">
+        <div class="col-xl-8">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-2">Single-tenant operator dashboard</p>
+          <h3 class="hero-title mb-3">See who touched your content, how they arrived, and what your site actually served.</h3>
+          <p class="text-muted fs-5 mb-4">Use this console to separate human traffic from likely AI agents, investigate suspicious journeys, and understand what resources were exposed.</p>
+          <div class="d-flex flex-wrap gap-3 align-items-center">
+            <a class="btn btn-success btn-lg" href="{% url 'tracker:session_list' %}">Review sessions</a>
+            <span class="small text-muted">“Accessed” means requested and served. “Likely extracted” remains an estimate.</span>
           </div>
-        {% endfor %}
-      </div>
-    </article>
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Acquisition</p>
-          <h3>Top referrers</h3>
+        </div>
+        <div class="col-xl-4">
+          <div class="card bg-dark-subtle border-0 h-100">
+            <div class="card-body">
+              <div class="small text-uppercase text-muted mb-2">Site ID</div>
+              <div class="fs-4 fw-bold mb-4">{{ tracker_site_id }}</div>
+              <div class="small text-uppercase text-muted mb-2">Generated</div>
+              <div class="fw-semibold">{{ generated_at|date:"Y-m-d H:i" }}</div>
+            </div>
+          </div>
         </div>
       </div>
-      <ul class="plain-list">
-        {% for item in top_referrers %}
-          <li>
-            <span>{{ item.landing_referrer|default:"Direct" }}</span>
-            <strong>{{ item.total }} sessions</strong>
-          </li>
-        {% empty %}
-          <li><span>No referrer data yet.</span></li>
-        {% endfor %}
-      </ul>
-    </article>
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Content pressure</p>
-          <h3>Top targeted paths</h3>
-        </div>
-      </div>
-      <ul class="plain-list">
-        {% for item in top_paths %}
-          <li>
-            <span>{{ item.path }}</span>
-            <strong>{{ item.total }} hits • {{ item.bytes_sum|default:0 }} bytes</strong>
-          </li>
-        {% empty %}
-          <li><span>No path data yet.</span></li>
-        {% endfor %}
-      </ul>
-    </article>
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Resource mix</p>
-          <h3>What your site served</h3>
-        </div>
-      </div>
-      <ul class="plain-list">
-        {% for item in resource_mix %}
-          <li>
-            <span>{{ item.resource_type|title }}</span>
-            <strong>{{ item.total }} events</strong>
-          </li>
-        {% empty %}
-          <li><span>No resource activity yet.</span></li>
-        {% endfor %}
-      </ul>
-    </article>
+    </div>
   </section>
 
-  <section class="panel">
-    <div class="panel-header">
-      <div>
-        <p class="eyebrow">Recent activity</p>
-        <h3>Latest sessions</h3>
+  <section class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Total sessions</div>
+          <div class="metric-value">{{ overview.total_sessions }}</div>
+          <div class="small text-muted">All tracked journeys</div>
+        </div>
       </div>
-      <a href="{% url 'tracker:session_list' %}">See all sessions</a>
     </div>
-    <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Session</th>
-          <th>Classification</th>
-          <th>Confidence</th>
-          <th>Source</th>
-          <th>Landing path</th>
-          <th>Last seen</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for session in latest_sessions %}
-          <tr>
-            <td>
-              <a class="session-link" href="{% url 'tracker:session_detail' session.public_id %}">{{ session.session_key }}</a>
-              <small>{{ session.landing_referrer|default:"direct"|truncatechars:42 }}</small>
-            </td>
-            <td><span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span></td>
-            <td>{{ session.confidence }}%</td>
-            <td>{{ session.traffic_source|default:"direct" }}</td>
-            <td>{{ session.landing_path|default:"-" }}</td>
-            <td>{{ session.last_seen_at|date:"Y-m-d H:i:s" }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6">No sessions recorded yet.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric dashboard-metric-alert border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Suspicious sessions</div>
+          <div class="metric-value">{{ overview.suspicious_sessions }}</div>
+          <div class="small text-muted">Needs operator review</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Known AI crawlers</div>
+          <div class="metric-value">{{ overview.known_ai_crawlers }}</div>
+          <div class="small text-muted">Self-identifying AI traffic</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Human sessions</div>
+          <div class="metric-value">{{ overview.human_sessions }}</div>
+          <div class="small text-muted">Likely normal browsing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4 mb-4">
+    <div class="col-12 col-xxl-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Priority queue</p>
+              <h4 class="mb-0">Top suspicious sessions</h4>
+            </div>
+          </div>
+          <div class="vstack gap-3">
+            {% for session in top_suspicious_sessions %}
+              <a class="card priority-session-card border text-decoration-none" href="{% url 'tracker:session_detail' session.public_id %}">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                    <div class="fw-semibold text-dark">{{ session.session_key }}</div>
+                    <span class="badge {{ session.classification }}-badge rounded-pill">{{ session.get_classification_display }}</span>
+                  </div>
+                  <p class="text-muted mb-3">{{ session.explanation|default:"No explanation recorded."|truncatechars:120 }}</p>
+                  <div class="d-flex flex-wrap gap-2 small text-muted">
+                    <span>{{ session.confidence }}% confidence</span>
+                    <span>{{ session.traffic_source|default:"direct" }}</span>
+                    <span>{{ session.last_seen_at|date:"Y-m-d H:i" }}</span>
+                  </div>
+                </div>
+              </a>
+            {% empty %}
+              <div class="alert alert-light border mb-0">No suspicious sessions yet. The queue will fill as traffic arrives.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xxl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Acquisition</p>
+          <h4 class="mb-3">Top referrers</h4>
+          <div class="list-group list-group-flush">
+            {% for item in top_referrers %}
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <span class="text-break pe-3">{{ item.landing_referrer|default:"Direct" }}</span>
+                <span class="badge text-bg-light rounded-pill">{{ item.total }}</span>
+              </div>
+            {% empty %}
+              <div class="text-muted">No referrer data yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xxl-2">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Content pressure</p>
+          <h4 class="mb-3">Top paths</h4>
+          <div class="list-group list-group-flush">
+            {% for item in top_paths %}
+              <div class="list-group-item px-0">
+                <div class="fw-semibold text-break">{{ item.path }}</div>
+                <div class="small text-muted">{{ item.total }} hits • {{ item.bytes_sum|default:0 }} bytes</div>
+              </div>
+            {% empty %}
+              <div class="text-muted">No path data yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xxl-2">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Resource mix</p>
+          <h4 class="mb-3">Served types</h4>
+          <div class="list-group list-group-flush">
+            {% for item in resource_mix %}
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                <span>{{ item.resource_type|title }}</span>
+                <span class="badge text-bg-light rounded-pill">{{ item.total }}</span>
+              </div>
+            {% empty %}
+              <div class="text-muted">No resource activity yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+        <div>
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Recent activity</p>
+          <h4 class="mb-0">Latest sessions</h4>
+        </div>
+        <a class="btn btn-outline-secondary" href="{% url 'tracker:session_list' %}">See all sessions</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Session</th>
+              <th>Classification</th>
+              <th>Confidence</th>
+              <th>Source</th>
+              <th>Landing path</th>
+              <th>Last seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for session in latest_sessions %}
+              <tr>
+                <td>
+                  <a class="fw-semibold text-decoration-none" href="{% url 'tracker:session_detail' session.public_id %}">{{ session.session_key }}</a>
+                  <div class="small text-muted mt-1">{{ session.landing_referrer|default:"direct"|truncatechars:42 }}</div>
+                </td>
+                <td><span class="badge {{ session.classification }}-badge rounded-pill">{{ session.get_classification_display }}</span></td>
+                <td>{{ session.confidence }}%</td>
+                <td>{{ session.traffic_source|default:"direct" }}</td>
+                <td>{{ session.landing_path|default:"-" }}</td>
+                <td>{{ session.last_seen_at|date:"Y-m-d H:i:s" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">No sessions recorded yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 {% endblock %}

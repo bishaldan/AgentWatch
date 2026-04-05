@@ -4,119 +4,148 @@
 {% block page_title %}Session investigation{% endblock %}
 
 {% block content %}
-  <section class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">Session investigation</p>
-      <h2>{{ session.session_key }}</h2>
-      <p class="muted">{{ session.explanation|default:"No strong automation signals detected." }}</p>
-      <div class="hero-actions">
-        <span class="status-badge status-{{ session.classification }}">{{ session.get_classification_display }}</span>
-        <span class="subtle-note">{{ session.confidence }}% confidence • score {{ session.latest_score }}</span>
-      </div>
-    </div>
-    <div class="meta-card meta-card-compact">
-      <span>Classification</span>
-      <strong>{{ session.get_classification_display }}</strong>
-      <span>Confidence</span>
-      <strong>{{ session.confidence }}%</strong>
-      <span>Score</span>
-      <strong>{{ session.latest_score }}</strong>
-    </div>
-  </section>
-
-  <section class="card-grid">
-    <article class="stat-card">
-      <span>Landing path</span>
-      <strong>{{ session.landing_path|default:"-" }}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Referrer</span>
-      <strong>{{ session.landing_referrer|default:"direct" }}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Traffic source</span>
-      <strong>{{ session.traffic_source|default:"direct" }}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Browser telemetry</span>
-      <strong>{% if session.browser_seen %}Seen{% else %}Not seen{% endif %}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Requests</span>
-      <strong>{{ total_requests }}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Resource events</span>
-      <strong>{{ total_resources }}</strong>
-    </article>
-    <article class="stat-card">
-      <span>Bytes served</span>
-      <strong>{{ total_bytes }}</strong>
-    </article>
-  </section>
-
-  <section class="split">
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Why this session was flagged</p>
-          <h3>Detection reasons</h3>
+  <section class="hero-panel card border-0 shadow-sm mb-4 overflow-hidden">
+    <div class="card-body p-4 p-xl-5">
+      <div class="row g-4 align-items-start">
+        <div class="col-xl-8">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-2">Session investigation</p>
+          <h3 class="hero-title mb-3">{{ session.session_key }}</h3>
+          <p class="text-muted fs-5 mb-4">{{ session.explanation|default:"No strong automation signals detected." }}</p>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge {{ session.classification }}-badge rounded-pill px-3 py-2">{{ session.get_classification_display }}</span>
+            <span class="badge text-bg-light border rounded-pill px-3 py-2">{{ session.confidence }}% confidence</span>
+            <span class="badge text-bg-light border rounded-pill px-3 py-2">Score {{ session.latest_score }}</span>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <div class="card bg-dark-subtle border-0 h-100">
+            <div class="card-body">
+              <div class="small text-uppercase text-muted mb-2">Traffic source</div>
+              <div class="fw-semibold mb-4">{{ session.traffic_source|default:"direct" }}</div>
+              <div class="small text-uppercase text-muted mb-2">Browser telemetry</div>
+              <div class="fw-semibold">{% if session.browser_seen %}Seen{% else %}Not seen{% endif %}</div>
+            </div>
+          </div>
         </div>
       </div>
-      <ul class="plain-list">
-        {% for signal in signal_list %}
-          <li>
-            <span>{{ signal.label }}</span>
-            <strong>weight {{ signal.weight }}</strong>
-          </li>
-        {% empty %}
-          <li><span>No strong automation signals recorded.</span></li>
-        {% endfor %}
-      </ul>
-    </article>
-    <article class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Requested and served</p>
-          <h3>Content accessed summary</h3>
-        </div>
-      </div>
-      <ul class="plain-list">
-        {% for item in resource_summary %}
-          <li>
-            <span>{{ item.resource_type|title }}</span>
-            <strong>{{ item.total }} events • {{ item.bytes_sum|default:0 }} bytes</strong>
-          </li>
-        {% empty %}
-          <li><span>No resource events recorded.</span></li>
-        {% endfor %}
-      </ul>
-      <p class="footnote">Content accessed means resources requested and served. It does not prove downstream retention.</p>
-    </article>
+    </div>
   </section>
 
-  <section class="panel">
-    <div class="panel-header">
-      <div>
-        <p class="eyebrow">Chronology</p>
-        <h3>Timeline</h3>
-      </div>
-      <div class="export-links">
-        <a class="ghost-link" href="{% url 'tracker:session_export_json' session.public_id %}">Export JSON</a>
-        <a class="ghost-link" href="{% url 'tracker:session_export_csv' session.public_id %}">Export CSV</a>
+  <section class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Landing path</div>
+          <div class="metric-subvalue text-break">{{ session.landing_path|default:"-" }}</div>
+        </div>
       </div>
     </div>
-    <ul class="timeline">
-      {% for item in timeline %}
-        <li class="timeline-item timeline-{{ item.kind }}">
-          <span class="timeline-time">{{ item.occurred_at|date:"Y-m-d H:i:s" }}</span>
-          <strong>{{ item.title }}</strong>
-          <p>{{ item.detail }}</p>
-          <small>{{ item.bytes_served }} bytes</small>
-        </li>
-      {% empty %}
-        <li>No events recorded for this session.</li>
-      {% endfor %}
-    </ul>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Referrer</div>
+          <div class="metric-subvalue text-break">{{ session.landing_referrer|default:"direct" }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-xl-2">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Requests</div>
+          <div class="metric-value">{{ total_requests }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-xl-2">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Resource events</div>
+          <div class="metric-value">{{ total_resources }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-xl-2">
+      <div class="card dashboard-metric border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="metric-label">Bytes served</div>
+          <div class="metric-value">{{ total_bytes }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Why this session was flagged</p>
+          <h4 class="mb-3">Detection reasons</h4>
+          <div class="list-group list-group-flush">
+            {% for signal in signal_list %}
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+                <span>{{ signal.label }}</span>
+                <span class="badge text-bg-light rounded-pill">weight {{ signal.weight }}</span>
+              </div>
+            {% empty %}
+              <div class="text-muted">No strong automation signals recorded.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Requested and served</p>
+          <h4 class="mb-3">Content accessed summary</h4>
+          <div class="list-group list-group-flush">
+            {% for item in resource_summary %}
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+                <span>{{ item.resource_type|title }}</span>
+                <span class="small text-muted text-end">{{ item.total }} events • {{ item.bytes_sum|default:0 }} bytes</span>
+              </div>
+            {% empty %}
+              <div class="text-muted">No resource events recorded.</div>
+            {% endfor %}
+          </div>
+          <div class="alert alert-light border mt-3 mb-0 small">Content accessed means resources requested and served. It does not prove downstream retention.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+        <div>
+          <p class="text-uppercase small fw-semibold tracking text-accent mb-1">Chronology</p>
+          <h4 class="mb-0">Timeline</h4>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-outline-secondary" href="{% url 'tracker:session_export_json' session.public_id %}">Export JSON</a>
+          <a class="btn btn-outline-secondary" href="{% url 'tracker:session_export_csv' session.public_id %}">Export CSV</a>
+        </div>
+      </div>
+      <div class="timeline-wrap">
+        <ul class="timeline list-unstyled mb-0">
+          {% for item in timeline %}
+            <li class="timeline-item timeline-{{ item.kind }}">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content card border-0 shadow-sm-sm">
+                <div class="card-body">
+                  <div class="small text-muted mb-2">{{ item.occurred_at|date:"Y-m-d H:i:s" }}</div>
+                  <div class="fw-semibold mb-1">{{ item.title }}</div>
+                  <p class="text-muted mb-2">{{ item.detail }}</p>
+                  <div class="small text-muted">{{ item.bytes_served }} bytes</div>
+                </div>
+              </div>
+            </li>
+          {% empty %}
+            <li class="text-muted">No events recorded for this session.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </section>
 {% endblock %}
